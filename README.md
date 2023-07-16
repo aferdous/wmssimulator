@@ -14,7 +14,7 @@
 
 2. Open the project on IntelliJIdea (I am using the free community edition). 
    - As an alternate you can just use maven to build the project.
-3. Run com.sunpower.scale.wmssimulator application. 
+3. Run com.sunpower.scale.wmssimulator.WmsSimulatorApplication. 
    - check console. 
    - There should be logs showing that simulated messages being sent to the kafka topic. 
 
