@@ -24,7 +24,7 @@
    - WmsSimulatorApplication - the springboot application
    - InventoryMoveEventProducer - a springboot Component that is scheduled to run once every second to send a message to the kafka topic
    - KafkaTopicConfiguration - a springboot Configuration with Bean that is loaded at startup and creates the topics with partitions.
-2. resources/application.properties - contains configuration for Apacke Kafka consumer.
+2. resources/application.properties - contains configuration for Apacke Kafka producer.
 3. Lombok is used to avoid boilerplate codes. 
 
    
