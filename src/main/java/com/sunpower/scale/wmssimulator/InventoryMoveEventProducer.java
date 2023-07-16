@@ -28,11 +28,45 @@ public class InventoryMoveEventProducer {
 
 
 
+    /**
+     * Simulates emitting of WMS domain event of Inventory movements. Configured to send one event every 1000 ms
+     * SKU is randomly generated between PRODUCT1000 and PRODUCT1200.
+     * Quantity is randomly generated between 0 and 99.
+     * WarehouseId is randomly generated between WH1000 and WH1020
+     * MovementType is randomly generated between one of MovementType.RECEIVED_AT_WAREHOUSE and MovementType.DELIVERED_FROM_WAREHOUSE
+     * In a complete implementation, we should also produce domain events related to Warehouse, Product and Inventory,
+     * for this implementation we have chosen to focus on the most important event for Inventory movements.
+     */
+    @Scheduled (fixedRate = 1000)
+    public void produceInventoryMoveEvents(){
+
+        int movementTypeCoin = movementTypeRandom.nextInt(2);
+
+        InventoryMovementRecord record = InventoryMovementRecord.builder()
+                .sku("PRODUCT" + (1000 + productIDRandom.nextInt(201)))
+                .quantityMoved(quantityRandom.nextInt(100))
+                .warehouseId("WH" + (1000 + wareHouseIdRandom.nextInt(21)))
+                .movementType(movementTypeCoin == 0 ? MovementType.RECEIVED_AT_WAREHOUSE : MovementType.DELIVERED_FROM_WAREHOUSE)
+                .movementTimeStamp(LocalDateTime.now())
+                .build();
+        InventoryMovedEvent event = InventoryMovedEvent.builder()
+                .name("InventoryMovedEvent")
+                .timeStamp(LocalDateTime.now())
+                .data(record)
+                .build();
+
+        sendEvent(event);
+    }
+
+    /**
+     * Sends an event to kafka topic to a specific partition. Ensures that combination of WH+Product is always
+     * delivered to the same partition to ensure ordering of the events. WH+ProductCode Hashcode mod 16 is used
+     * to calculate to which partition the message should be delivered to.
+     * @param event
+     */
     private void sendEvent(InventoryMovedEvent event){
-        //We have configured 16 shards. In order to guarantee order for movements on WH+Product combination
-        // We will ensure that same WH+Product combination already gets pushed to the same partition.
+
         String key = event.getData().getWarehouseId() + event.getData().getSku();
-        // send the event through Kafka.
         CompletableFuture<SendResult<String, InventoryMovedEvent>> future
                 = kafkaTemplate.send("InventoryMovedEvent", Math.abs(key.hashCode())%16 , key , event);
 
@@ -45,25 +79,5 @@ public class InventoryMoveEventProducer {
                     }
                 }
         );
-    }
-    @Scheduled (fixedRate = 5000)
-    public void produceInventoryMoveEvents(){
-
-        int movementTypeCoin = movementTypeRandom.nextInt(2);
-
-        InventoryMovementRecord record = InventoryMovementRecord.builder()
-                .sku("PRODUCT" + (1000 + productIDRandom.nextInt(200)))
-                .quantityMoved(quantityRandom.nextInt(100))
-                .warehouseId("WH" + (1000 + wareHouseIdRandom.nextInt(20)))
-                .movementType(movementTypeCoin == 0 ? MovementType.RECEIVED_AT_WAREHOUSE : MovementType.DELIVERED_FROM_WAREHOUSE)
-                .movementTimeStamp(LocalDateTime.now())
-                .build();
-        InventoryMovedEvent event = InventoryMovedEvent.builder()
-                .name("InventoryMovedEvent")
-                .timeStamp(LocalDateTime.now())
-                .data(record)
-                .build();
-
-        sendEvent(event);
     }
 }

@@ -8,6 +8,10 @@ import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
 public class KafktaTopicConfiguration {
+    /**
+     * Creates kafka topic with partitions.
+     * @return
+     */
     @Bean
     public NewTopic inventoryMoveTopicBuilder(){
         return TopicBuilder.name("InventoryMovedEvent")
